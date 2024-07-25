@@ -1,0 +1,54 @@
+# docker-compose up -d --build
+version: "3.8"
+volumes:
+  vendor:
+  storage-framework:
+services:
+  web:
+    image: almalinux:latest
+    container_name: example
+    restart: always
+    ports:
+      - 443:443
+      - 5173:5173
+      - 80:80
+      - 8080:8080
+      - 9000:9000
+    privileged: true
+    command: /sbin/init
+    volumes:
+      - X:/var/www/html/example.com:/var/www/html
+    build:
+      context: .
+      dockerfile: Dockerfile
+  mysqldb1:
+      image: mysql:latest
+      container_name: example-db
+      command: --default-authentication-plugin=mysql_native_password
+      restart: always
+      environment:
+        MYSQL_HOST: example
+        MYSQL_USER: example
+        MYSQL_PASSWORD: example
+        MYSQL_DATABASE: example
+        MYSQL_ROOT_PASSWORD: example
+        TZ: "Asia/Tokyo"
+      ports:
+        - 3306:3306
+      expose:
+        - '3306'
+      volumes:
+        - ./example/mysql/mysql_init:/docker-entrypoint-initdb.d
+        - ./example/mysql/mysql_data:/var/lib/mysql
+      tty: true
+  #メールサーバのコンテナ http://localhost:8025
+  mail:
+    image: mailhog/mailhog
+    container_name: example-mailhog
+    ports:
+      - "8025:8025"
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /tmp
+    volumes:
+      - ./example/mailtmp:/tmp
